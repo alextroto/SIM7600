@@ -33,8 +33,8 @@
 #define GSM_PIN ""
 
 // Your GPRS credentials, if any
-const char apn[] = "YourAPN";
-const char gprsUser[] = "";
+const char apn[] = "internet.vodafone.ro";
+const char gprsUser[] = "internet.vodafone.ro";
 const char gprsPass[] = "";
 
 #include <TinyGsmClient.h>
@@ -81,6 +81,7 @@ void setup()
 {
   // Set console baud rate
   SerialMon.begin(115200);
+  SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
   delay(10);
 
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -88,12 +89,13 @@ void setup()
 
   // Onboard LED light, it can be used freely
   pinMode(LED_PIN, OUTPUT);
+
   digitalWrite(LED_PIN, LOW);
 
   // POWER_PIN : This pin controls the power supply of the SIM7600
   pinMode(POWER_PIN, OUTPUT);
   digitalWrite(POWER_PIN, HIGH);
-
+  delay(2000);
   // PWR_PIN ： This Pin is the PWR-KEY of the SIM7600
   // The time of active low level impulse of PWRKEY pin to power on module , type 500 ms
   pinMode(PWR_PIN, OUTPUT);
@@ -116,20 +118,23 @@ void setup()
       CHANGE);
 
   DBG("Wait...");
-
-  delay(3000);
-
-  SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
+  delay(8000);
 
   // Restart takes quite some time
   // To skip it, call init() instead of restart()
-  DBG("Initializing modem...");
-  if (!modem.init())
+  for (;;)
   {
-    DBG("Failed to restart modem, delaying 10s and retrying");
-    return;
+    DBG("Initializing modem...");
+    if (!modem.init())
+    {
+      DBG("Failed to restart modem, delaying 10s and retrying");
+      delay(2000);
+    }
+    else
+    {
+      break;
+    }
   }
-
   // Set to GSM mode, please refer to manual 5.11 AT+CNMP Preferred mode selection for more parameters
   /* String result;
    do {
@@ -138,11 +143,13 @@ void setup()
    } while (result != "OK");*/
   String result;
   result = modem.setNetworkMode(38);
+  DBG("setNetworkMode result:", result);
+  /*
   if (modem.waitResponse(10000L) != 1)
   {
-    DBG(" setNetworkMode faill");
+    DBG(" setNetworkMode fail");
     return;
-  }
+  }*/
   modem.enableGPS();
 #if 0
     //https://github.com/vshymanskyy/TinyGSM/pull/405
@@ -233,15 +240,19 @@ void loop()
   {
     Serial.printf("lat:%f lon:%f\n", lat, lon);
   }
+  else
+  {
+    Serial.printf("No gps locked\n");
+  }
   int err = http.get(resource);
   if (err != 0)
   {
-    Serial.println(F("failed to connect"));
+    Serial.println(F("failed to http get!\n"));
   }
 
   int status = http.responseStatusCode();
-  Serial.printf("Response status code: %d", status);
-
+  Serial.printf("Response status code: %d\n", status);
+  http.stop();
   delay(30 * 1000); // wait 30 seconds
 }
 bool initPMU()
