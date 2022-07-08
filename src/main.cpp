@@ -36,7 +36,7 @@
 const char apn[] = "internet.vodafone.ro";
 const char gprsUser[] = "internet.vodafone.ro";
 const char gprsPass[] = "";
-
+char request[30];
 #include <TinyGsmClient.h>
 #include <Ticker.h>
 #include <ArduinoHttpClient.h>
@@ -49,7 +49,7 @@ TinyGsm modem(debugger);
 TinyGsm modem(SerialAT);
 TinyGsmClient client(modem);
 const char server[] = "ares-alpha.com";
-const char resource[] = "/api/v1/version";
+
 const int port = 80;
 HttpClient http(client, server, port);
 
@@ -234,7 +234,10 @@ void loop()
   {
     Serial.printf("No gps locked\n");
   }
-  int err = http.get(resource);
+  float battery = PMU.getBattVoltage();
+  DBG("Battery level=", battery);
+  sprintf(request, "/api/v1/battery?battery=%f", battery);
+  int err = http.get(request);
   if (err != 0)
   {
     Serial.println(F("failed to http get!\n"));
