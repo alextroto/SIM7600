@@ -48,8 +48,8 @@ TinyGsm modem(debugger);
 #else
 TinyGsm modem(SerialAT);
 TinyGsmClient client(modem);
-const char server[] = "vsh.pp.ua";
-const char resource[] = "/TinyGSM/logo.txt";
+const char server[] = "ares-alpha.com";
+const char resource[] = "/api/v1/version";
 const int port = 80;
 HttpClient http(client, server, port);
 
