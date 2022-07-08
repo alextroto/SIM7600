@@ -90,7 +90,7 @@ void setup()
   // Onboard LED light, it can be used freely
   pinMode(LED_PIN, OUTPUT);
 
-  digitalWrite(LED_PIN, LOW);
+  digitalWrite(LED_PIN, HIGH);
 
   // POWER_PIN : This pin controls the power supply of the SIM7600
   pinMode(POWER_PIN, OUTPUT);
@@ -106,16 +106,6 @@ void setup()
   // IND_PIN: It is connected to the SIM7600 status Pin,
   // through which you can know whether the module starts normally.
   pinMode(IND_PIN, INPUT);
-
-  attachInterrupt(
-      IND_PIN, []()
-      {
-        detachInterrupt(IND_PIN);
-        // If SIM7600 starts normally, then set the onboard LED to flash once every 1 second
-        tick.attach_ms(1000, []() {
-            digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-        }); },
-      CHANGE);
 
   DBG("Wait...");
   delay(8000);
@@ -142,7 +132,7 @@ void setup()
        delay(500);
    } while (result != "OK");*/
   String result;
-  result = modem.setNetworkMode(38);
+  result = modem.setNetworkMode(2);
   DBG("setNetworkMode result:", result);
   /*
   if (modem.waitResponse(10000L) != 1)
@@ -252,6 +242,23 @@ void loop()
 
   int status = http.responseStatusCode();
   Serial.printf("Response status code: %d\n", status);
+  if (status == 200)
+  {
+    digitalWrite(LED_PIN, LOW);
+    delay(200);
+    digitalWrite(LED_PIN, HIGH);
+  }
+  else
+  {
+    for (int i = 0; i < 3; i++)
+    {
+
+      digitalWrite(LED_PIN, LOW);
+      delay(50);
+      digitalWrite(LED_PIN, HIGH);
+      delay(50);
+    }
+  }
   http.stop();
   delay(30 * 1000); // wait 30 seconds
 }
